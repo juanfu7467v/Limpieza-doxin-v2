@@ -18,7 +18,7 @@ app.get('/ficha', async (req, res) => {
   }
 
   try {
-    const response = await axios.get(`https://generar-imagen-c4-production-54ff.up.railway.app/generar-ficha?dni=${dni}`);
+    const response = await axios.get(`https://generar-pdf-peapp-production.up.railway.app/generar-ficha?dni=${dni}`);
 
     if (response.data && response.data.url) {
       return res.json({
