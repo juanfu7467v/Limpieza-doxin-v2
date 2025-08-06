@@ -1,45 +1,53 @@
+// main.js
+
 const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
 
 const app = express();
-app.use(cors());
-
 const PORT = process.env.PORT || 3000;
 
+// Habilitar CORS para todas las rutas
+app.use(cors());
+
+// Ruta principal para consultar la ficha
 app.get('/ficha', async (req, res) => {
   const { dni } = req.query;
 
-  if (!dni) {
+  if (!dni || dni.length !== 8 || isNaN(dni)) {
     return res.status(400).json({
-      message: '❌ DNI requerido',
-      url: null
+      message: '❌ DNI inválido. Debe tener 8 dígitos.',
+      urls: null
     });
   }
 
   try {
-    const response = await axios.get(`https://generar-pdf-peapp-production.up.railway.app/generar-ficha?dni=${dni}`);
+    const urlAPI = `https://generar-pdf-peapp-production.up.railway.app/generar-ficha?dni=${dni}`;
+    const response = await axios.get(urlAPI);
 
-    if (response.data && response.data.url) {
+    const data = response.data;
+
+    if (data && data.urls && Array.isArray(data.urls) && data.urls.length > 0) {
       return res.json({
-        message: "Ficha generada",
-        url: response.data.url
+        message: `✅ Se generaron ${data.urls.length} imágenes correctamente.`,
+        urls: data.urls
       });
     } else {
-      return res.status(500).json({
-        message: "❌ No se pudo generar la ficha",
-        url: null
+      return res.status(404).json({
+        message: '❌ No se encontraron imágenes para este DNI.',
+        urls: null
       });
     }
   } catch (error) {
-    console.error('❌ Error en la consulta externa:', error.message);
+    console.error('❌ Error al procesar la ficha:', error.message);
     return res.status(500).json({
-      message: "❌ Error al consultar la ficha. Inténtalo nuevamente.",
-      url: null
+      message: '❌ Error interno del servidor al generar la ficha.',
+      urls: null
     });
   }
 });
 
+// Iniciar el servidor
 app.listen(PORT, () => {
-  console.log(`✅ Servidor corriendo en el puerto ${PORT}`);
+  console.log(`✅ Servidor funcionando en el puerto ${PORT}`);
 });
